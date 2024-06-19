@@ -25,14 +25,15 @@ class CommentSection extends StatelessWidget {
         BlocBuilder<TaskDetailsBloc, TaskDetailsState>(
           bloc: taskDetailsBloc,
           buildWhen: (previous, current) {
-            if (current is TaskDetailsCommentUpdatedState) {
+            if (current is TaskDetailsCommentUpdatedState ||
+                current is TaskDetailsCommentsLoadingState) {
               return true;
             } else {
               return false;
             }
           },
           builder: (context, state) {
-            if (taskDetailsBloc.isCommentLoading) {
+            if (state is TaskDetailsCommentsLoadingState) {
               return const Column(
                 children: [
                   SizedBox(height: 20),

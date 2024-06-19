@@ -50,7 +50,7 @@ class _TaskHistoryScreen extends StatelessWidget {
         if (taskHistoryBloc.taskList.isEmpty) {
           return Center(
               child: Text(
-            "Competed Task Task Found",
+            "Competed Task Not Found",
             style: theme.textTheme.headlineSmall,
           ));
         }

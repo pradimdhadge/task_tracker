@@ -126,7 +126,9 @@ class _TaskDetailsScreen extends StatelessWidget {
                 ),
               ),
             ),
-            floatingActionButton: CommentTextField(),
+            floatingActionButton: taskDetailsBloc.screenConfig?.task != null
+                ? CommentTextField()
+                : null,
             floatingActionButtonLocation:
                 FloatingActionButtonLocation.centerDocked,
           );

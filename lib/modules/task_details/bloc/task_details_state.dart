@@ -37,4 +37,6 @@ class TaskDetailsSpendTimeUpdatedState extends TaskDetailsState {}
 
 class TaskDetailsCommentUpdatedState extends TaskDetailsState {}
 
+class TaskDetailsCommentsLoadingState extends TaskDetailsState {}
+
 class TaskDetailsCommentAddingState extends TaskDetailsState {}

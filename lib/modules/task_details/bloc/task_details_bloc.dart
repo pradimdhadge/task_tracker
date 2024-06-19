@@ -46,7 +46,6 @@ class TaskDetailsBloc extends Bloc<TaskDetailsEvent, TaskDetailsState> {
   Duration spendTime = const Duration();
   Timer? _timer;
   bool get isTaskCompleted => screenConfig?.task?.isCompleted ?? true;
-  bool isCommentLoading = true;
   List<CommentModel> comments = [];
 
   void _taskDetailsIntialEvent(
@@ -136,6 +135,7 @@ class TaskDetailsBloc extends Bloc<TaskDetailsEvent, TaskDetailsState> {
           payload: payload, taskId: screenConfig?.task?.id);
       if (dataState is DataSuccess) {
         isDataUpdated = true;
+        bool isAdded = screenConfig?.task?.id == null;
 
         screenConfig = TaskDetailsScreenConfig(
           currentSection: selectedSection,
@@ -145,6 +145,13 @@ class TaskDetailsBloc extends Bloc<TaskDetailsEvent, TaskDetailsState> {
 
         isEditing = false;
         emit(TaskDetailsTaskAddedState());
+
+        if (isAdded) {
+          isTaskTimeLoading = false;
+          spendTime = Duration.zero;
+          taskTime = TaskTimeModel(taskId: screenConfig!.task!.id!);
+          emit(TaskDetailsTaskTimeLoadedState());
+        }
       } else {
         emit(TaskDetailsTaskAddFailedState(
             dataState.error?.errorResponse?.error ?? "Something went wrong"));
@@ -287,6 +294,7 @@ class TaskDetailsBloc extends Bloc<TaskDetailsEvent, TaskDetailsState> {
   void _taskDetailsGetCommentEvent(
       TaskDetailsGetCommentEvent event, Emitter<TaskDetailsState> emit) async {
     try {
+      emit(TaskDetailsCommentsLoadingState());
       DataState<List<CommentModel>> dataState =
           await _repository.getComments(taskId: screenConfig!.task!.id!);
 
@@ -296,7 +304,6 @@ class TaskDetailsBloc extends Bloc<TaskDetailsEvent, TaskDetailsState> {
     } catch (e, stack) {
       log(e.toString(), stackTrace: stack);
     } finally {
-      isCommentLoading = false;
       emit(TaskDetailsCommentUpdatedState());
     }
   }

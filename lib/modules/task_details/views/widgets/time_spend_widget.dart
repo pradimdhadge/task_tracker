@@ -22,7 +22,7 @@ class TimeSpendWidget extends StatelessWidget {
       },
       builder: (context, state) {
         if (taskDetailsBloc.isTaskTimeLoading) {
-          return Container();
+          return const SizedBox();
         } else if (taskDetailsBloc.taskTime == null) {
           return const SizedBox();
         }

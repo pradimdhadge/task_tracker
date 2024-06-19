@@ -12,6 +12,7 @@ import 'package:task_tracker/modules/kanban_board/views/create_section_modal.dar
 import 'package:task_tracker/modules/kanban_board/views/section_setting_modal.dart';
 import 'package:task_tracker/modules/kanban_board/views/task_card_loading.dart';
 import 'package:task_tracker/modules/task_details/config/task_details_screen_config.dart';
+import 'package:task_tracker/modules/themes/views/theme_modal.dart';
 
 import 'task_card.dart';
 
@@ -45,7 +46,7 @@ class _KanbanBoard extends StatelessWidget {
             icon: const Icon(Icons.history_rounded),
           ),
           IconButton(
-            onPressed: () {},
+            onPressed: () => ThemeModalBottomSheet.show(context),
             icon: const Icon(Icons.color_lens_rounded),
           ),
         ],
@@ -111,7 +112,7 @@ class _KanbanBoard extends StatelessWidget {
           children: [
             SizedBox(height: 5),
             SectionPart(),
-            SizedBox(height: 25),
+            SizedBox(height: 20),
             Expanded(child: TaskPart())
           ],
         ),
@@ -282,9 +283,9 @@ class TaskPart extends StatelessWidget {
                 ),
               );
             }
-            return ReorderableListView.builder(
-              buildDefaultDragHandles: false,
+            return ListView.builder(
               itemCount: tasks.length,
+              padding: EdgeInsets.only(top: 5, bottom: 50),
               itemBuilder: (context, index) {
                 return TaskCard(
                   key: GlobalKey(),
@@ -306,16 +307,8 @@ class TaskPart extends StatelessWidget {
                         updatedData: result, currentTask: tasks[index]));
                   },
                   task: tasks[index],
-                  dragHandler: ReorderableDragStartListener(
-                    index: index,
-                    child: Icon(
-                      Icons.reorder_outlined,
-                      color: theme.colorScheme.outline,
-                    ),
-                  ),
                 );
               },
-              onReorder: (oldIndex, newIndex) {},
             );
           },
         );
