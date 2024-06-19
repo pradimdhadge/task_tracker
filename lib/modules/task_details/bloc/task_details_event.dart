@@ -32,3 +32,10 @@ class TaskDetailsStartTaskEvent extends TaskDetailsEvent {}
 class TaskDetailsPauseTaskEvent extends TaskDetailsEvent {}
 
 class TaskDetailsTimerUpdateEvent extends TaskDetailsEvent {}
+
+class TaskDetailsGetCommentEvent extends TaskDetailsEvent {}
+
+class TaskDetailsSendCommentEvent extends TaskDetailsEvent {
+  final String content;
+  TaskDetailsSendCommentEvent(this.content);
+}

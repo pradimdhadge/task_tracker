@@ -34,3 +34,7 @@ class TaskDetailsErrorState extends TaskDetailsState {
 }
 
 class TaskDetailsSpendTimeUpdatedState extends TaskDetailsState {}
+
+class TaskDetailsCommentUpdatedState extends TaskDetailsState {}
+
+class TaskDetailsCommentAddingState extends TaskDetailsState {}

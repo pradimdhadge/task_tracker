@@ -12,6 +12,7 @@ import 'package:task_tracker/modules/task_details/bloc/task_details_event.dart';
 import 'package:task_tracker/modules/task_details/bloc/task_details_state.dart';
 import 'package:task_tracker/modules/task_details/config/task_details_screen_config.dart';
 import 'package:task_tracker/modules/task_details/models/add_task_request_model.dart';
+import 'package:task_tracker/modules/task_details/models/comment_model.dart';
 import 'package:task_tracker/modules/task_details/models/task_time_model.dart';
 import 'package:task_tracker/modules/task_details/repository/task_details_repository.dart';
 
@@ -28,6 +29,8 @@ class TaskDetailsBloc extends Bloc<TaskDetailsEvent, TaskDetailsState> {
     on<TaskDetailsStartTaskEvent>(_taskDetailsStartTaskEvent);
     on<TaskDetailsPauseTaskEvent>(_taskDetailsPauseTaskEvent);
     on<TaskDetailsTimerUpdateEvent>(_taskDetailsTimerUpdateEvent);
+    on<TaskDetailsGetCommentEvent>(_taskDetailsGetCommentEvent);
+    on<TaskDetailsSendCommentEvent>(_taskDetailsSendCommentEvent);
   }
   final TaskDetailsRepoInterfase _repository =
       GetIt.instance.get<TaskDetailsRepoInterfase>();
@@ -43,6 +46,8 @@ class TaskDetailsBloc extends Bloc<TaskDetailsEvent, TaskDetailsState> {
   Duration spendTime = const Duration();
   Timer? _timer;
   bool get isTaskCompleted => screenConfig?.task?.isCompleted ?? true;
+  bool isCommentLoading = true;
+  List<CommentModel> comments = [];
 
   void _taskDetailsIntialEvent(
       TaskDetailsIntialEvent event, Emitter<TaskDetailsState> emit) async {
@@ -53,6 +58,8 @@ class TaskDetailsBloc extends Bloc<TaskDetailsEvent, TaskDetailsState> {
     emit(TaskDetailsSectionUpdateState());
 
     if (screenConfig?.task != null) {
+      add(TaskDetailsGetCommentEvent());
+
       DataState<TaskTimeModel> dataState =
           await _repository.getTaskTime(taskId: screenConfig!.task!.id!);
       if (dataState is DataSuccess) {
@@ -274,6 +281,41 @@ class TaskDetailsBloc extends Bloc<TaskDetailsEvent, TaskDetailsState> {
     } catch (e) {
       emit(TaskDetailsTaskClosedState(
           isClosed: false, message: "Somthing went wrong"));
+    }
+  }
+
+  void _taskDetailsGetCommentEvent(
+      TaskDetailsGetCommentEvent event, Emitter<TaskDetailsState> emit) async {
+    try {
+      DataState<List<CommentModel>> dataState =
+          await _repository.getComments(taskId: screenConfig!.task!.id!);
+
+      if (dataState is DataSuccess) {
+        comments = dataState.data ?? [];
+      }
+    } catch (e, stack) {
+      log(e.toString(), stackTrace: stack);
+    } finally {
+      isCommentLoading = false;
+      emit(TaskDetailsCommentUpdatedState());
+    }
+  }
+
+  void _taskDetailsSendCommentEvent(
+      TaskDetailsSendCommentEvent event, Emitter<TaskDetailsState> emit) async {
+    try {
+      if (event.content.isEmpty) return;
+      emit(TaskDetailsCommentAddingState());
+      DataState<CommentModel> dataState = await _repository.addComment(
+          taskId: screenConfig!.task!.id!, content: event.content);
+
+      if (dataState is DataSuccess) {
+        comments.add(dataState.data!);
+      }
+    } catch (e, stack) {
+      log(e.toString(), stackTrace: stack);
+    } finally {
+      emit(TaskDetailsCommentUpdatedState());
     }
   }
 

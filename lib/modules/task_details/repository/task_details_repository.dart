@@ -7,12 +7,16 @@ import '../../../core/network/api_client_interface.dart';
 import '../../../core/resources/data_state.dart';
 import '../../kanban_board/models/task_model.dart';
 import '../models/add_task_request_model.dart';
+import '../models/comment_model.dart';
 
 abstract class TaskDetailsRepoInterfase {
   Future<DataState<TaskModel>> addTask(
       {required AddTaskRequestModel payload, String? taskId});
   Future<DataState<bool>> deleteTask({required String taskId});
   Future<DataState<bool>> closeTask({required String taskId});
+  Future<DataState<List<CommentModel>>> getComments({required String taskId});
+  Future<DataState<CommentModel>> addComment(
+      {required String taskId, required String content});
   Future<DataState<bool>> saveTaskInLocal(
       {required TaskModel task, required num spendTime});
   Future<DataState<bool>> startTask({required String taskId});
@@ -156,6 +160,44 @@ class TaskDetailsRepository
       return const DataSuccess(true);
     } catch (e) {
       return DataFailed(ApiError(errorResponse: ErrorResponse()));
+    }
+  }
+
+  @override
+  Future<DataState<CommentModel>> addComment(
+      {required String taskId, required String content}) async {
+    final ClientResponse response = await client.request(
+      RequestParam(
+        path: paths.comments,
+        methodType: MethodType.post,
+        payload: {"task_id": taskId, "content": content},
+      ),
+    );
+
+    if (response.apiResponse != null) {
+      return DataSuccess(CommentModel.fromJson(response.apiResponse?.data));
+    } else {
+      return DataFailed(response.apiError!);
+    }
+  }
+
+  @override
+  Future<DataState<List<CommentModel>>> getComments(
+      {required String taskId}) async {
+    final ClientResponse response = await client.request(
+      RequestParam(
+        path: paths.comments,
+        methodType: MethodType.get,
+        payload: {"task_id": taskId},
+      ),
+    );
+
+    if (response.apiResponse != null) {
+      return DataSuccess((response.apiResponse?.data as List)
+          .map((e) => CommentModel.fromJson(e))
+          .toList());
+    } else {
+      return DataFailed(response.apiError!);
     }
   }
 }

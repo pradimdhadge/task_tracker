@@ -47,87 +47,91 @@ class _TaskDetailsScreen extends StatelessWidget {
         }
       },
       child: BlocConsumer<TaskDetailsBloc, TaskDetailsState>(
-          bloc: taskDetailsBloc,
-          listener: (BuildContext context, TaskDetailsState state) {
-            if (state is TaskDetailsLoaderState) {
-              if (state.showLoader) {
-                CommonLoader().showLoader(context);
-              } else {
-                CommonLoader().hideLoader(context);
-              }
-            } else if (state is TaskDetailsTaskClosedState) {
-              if (state.isClosed) {
-                context.pop();
-              }
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text(state.message)));
+        bloc: taskDetailsBloc,
+        listener: (BuildContext context, TaskDetailsState state) {
+          if (state is TaskDetailsLoaderState) {
+            if (state.showLoader) {
+              CommonLoader().showLoader(context);
+            } else {
+              CommonLoader().hideLoader(context);
             }
-          },
-          buildWhen: (previous, current) {
-            if (current is TaskDetailsScreenUpdateState ||
-                current is TaskDetailsTaskAddedState) {
-              return true;
+          } else if (state is TaskDetailsTaskClosedState) {
+            if (state.isClosed) {
+              context.pop();
             }
-            return false;
-          },
-          builder: (BuildContext context, TaskDetailsState state) {
-            return Scaffold(
-              appBar: AppBar(
-                title: Text(
-                  taskDetailsBloc.screenConfig?.task == null
-                      ? "Add Task"
-                      : "Task Details",
-                ),
-                actions: taskDetailsBloc.screenConfig?.task != null &&
-                        !taskDetailsBloc.isTaskCompleted
-                    ? [
-                        FilledButton.icon(
-                          onPressed: () {
-                            FocusManager.instance.primaryFocus?.unfocus();
-                            taskDetailsBloc.add(TaskDetailsEditTaskEvent());
-                          },
-                          label:
-                              Text(taskDetailsBloc.isEditing ? "Save" : "Edit"),
-                          icon: Icon(taskDetailsBloc.isEditing
-                              ? Icons.done
-                              : Icons.edit),
-                        ),
-                        PopupMenuButton<Never>(
-                          padding: const EdgeInsets.all(0),
-                          color: theme.colorScheme.surface,
-                          surfaceTintColor: theme.colorScheme.surface,
-                          icon: const Icon(Icons.more_vert_rounded),
-                          itemBuilder: (BuildContext context) => [
-                            MoreActionWidget(taskDetailsBloc: taskDetailsBloc)
-                          ],
-                        ),
-                        const SizedBox(width: 20),
-                      ]
-                    : [],
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(state.message)));
+          }
+        },
+        buildWhen: (previous, current) {
+          if (current is TaskDetailsScreenUpdateState ||
+              current is TaskDetailsTaskAddedState) {
+            return true;
+          }
+          return false;
+        },
+        builder: (BuildContext context, TaskDetailsState state) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(
+                taskDetailsBloc.screenConfig?.task == null
+                    ? "Add Task"
+                    : "Task Details",
               ),
-              body: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (taskDetailsBloc.isEditing ||
-                          taskDetailsBloc.screenConfig?.task == null)
-                        const AddTaskForm()
-                      else
-                        const TaskDetailsSection(),
-                      if (taskDetailsBloc.screenConfig?.task != null) ...[
-                        const SizedBox(height: 35),
-                        const TimeSpendWidget(),
-                        const Divider(height: 60),
-                        const CommentSection(),
-                      ],
+              actions: taskDetailsBloc.screenConfig?.task != null &&
+                      !taskDetailsBloc.isTaskCompleted
+                  ? [
+                      FilledButton.icon(
+                        onPressed: () {
+                          FocusManager.instance.primaryFocus?.unfocus();
+                          taskDetailsBloc.add(TaskDetailsEditTaskEvent());
+                        },
+                        label:
+                            Text(taskDetailsBloc.isEditing ? "Save" : "Edit"),
+                        icon: Icon(taskDetailsBloc.isEditing
+                            ? Icons.done
+                            : Icons.edit),
+                      ),
+                      PopupMenuButton<Never>(
+                        padding: const EdgeInsets.all(0),
+                        color: theme.colorScheme.surface,
+                        surfaceTintColor: theme.colorScheme.surface,
+                        icon: const Icon(Icons.more_vert_rounded),
+                        itemBuilder: (BuildContext context) => [
+                          MoreActionWidget(taskDetailsBloc: taskDetailsBloc)
+                        ],
+                      ),
+                      const SizedBox(width: 20),
+                    ]
+                  : [],
+            ),
+            body: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (taskDetailsBloc.isEditing ||
+                        taskDetailsBloc.screenConfig?.task == null)
+                      const AddTaskForm()
+                    else
+                      const TaskDetailsSection(),
+                    if (taskDetailsBloc.screenConfig?.task != null) ...[
+                      const SizedBox(height: 35),
+                      const TimeSpendWidget(),
+                      const Divider(height: 60),
+                      const CommentSection(),
                     ],
-                  ),
+                  ],
                 ),
               ),
-            );
-          }),
+            ),
+            floatingActionButton: CommentTextField(),
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.centerDocked,
+          );
+        },
+      ),
     );
   }
 }
