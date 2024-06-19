@@ -6,7 +6,7 @@ class TaskModel extends Equatable {
   final String? assigneeId;
   final String? assignerId;
   final int? commentCount;
-  final bool? isCompleted;
+  bool? isCompleted;
   final String? content;
   final String? description;
   final Due? due;
@@ -20,27 +20,28 @@ class TaskModel extends Equatable {
   final String? parentId;
   final String? url;
 
-  const TaskModel(
-      {this.creatorId,
-      this.createdAt,
-      this.assigneeId,
-      this.assignerId,
-      this.commentCount,
-      this.isCompleted,
-      this.content,
-      this.description,
-      this.due,
-      this.duration,
-      this.id,
-      this.labels,
-      this.order,
-      this.priority,
-      this.projectId,
-      this.sectionId,
-      this.parentId,
-      this.url});
+  TaskModel({
+    this.creatorId,
+    this.createdAt,
+    this.assigneeId,
+    this.assignerId,
+    this.commentCount,
+    this.isCompleted,
+    this.content,
+    this.description,
+    this.due,
+    this.duration,
+    this.id,
+    this.labels,
+    this.order,
+    this.priority,
+    this.projectId,
+    this.sectionId,
+    this.parentId,
+    this.url,
+  });
 
-  factory TaskModel.fromJson(Map<String, dynamic> json) {
+  factory TaskModel.fromJson(Map json) {
     return TaskModel(
       creatorId: json["creator_id"],
       createdAt: json["created_at"],
@@ -122,7 +123,7 @@ class Due extends Equatable {
   const Due(
       {this.date, this.isRecurring, this.datetime, this.string, this.timezone});
 
-  factory Due.fromJson(Map<String, dynamic> json) {
+  factory Due.fromJson(Map json) {
     return Due(
       date: json["date"],
       isRecurring: json["is_recurring"],

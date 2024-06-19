@@ -69,7 +69,7 @@ class ApiClient implements ApiClientInterface {
     } on DioException catch (e, stack) {
       ApiError apiError = ApiError(
         message: e.message,
-        errorResponse: null,
+        errorResponse: ErrorResponse.fromMap(e.response?.data ?? {}),
         statusCode: e.response?.statusCode,
         error: e.error,
       );

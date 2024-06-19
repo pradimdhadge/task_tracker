@@ -12,8 +12,9 @@ abstract class KanbanBoardRepoInterface {
       {required String projectId});
   Future<DataState<SectionModel>> createSection(
       {required String name, required String projectId, int? order});
-  Future<DataState<SectionModel>> updateSection();
-  Future<DataState<bool>> deleteSection();
+  Future<DataState<SectionModel>> updateSection(
+      {required String sectionId, required String name});
+  Future<DataState<bool>> deleteSection({required String sectionId});
   Future<DataState<List<TaskModel>>> getTasks();
 }
 
@@ -37,9 +38,19 @@ class KanbanBoardRepo with RepoHelper implements KanbanBoardRepoInterface {
   }
 
   @override
-  Future<DataState<bool>> deleteSection() {
-    // TODO: implement deleteSection
-    throw UnimplementedError();
+  Future<DataState<bool>> deleteSection({required String sectionId}) async {
+    final ClientResponse response = await client.request(
+      RequestParam(
+        path: "${paths.sections}/$sectionId",
+        methodType: MethodType.delete,
+      ),
+    );
+
+    if (response.apiResponse != null) {
+      return const DataSuccess(true);
+    } else {
+      return DataFailed(response.apiError!);
+    }
   }
 
   @override
@@ -93,8 +104,20 @@ class KanbanBoardRepo with RepoHelper implements KanbanBoardRepoInterface {
   }
 
   @override
-  Future<DataState<SectionModel>> updateSection() {
-    // TODO: implement updateSection
-    throw UnimplementedError();
+  Future<DataState<SectionModel>> updateSection(
+      {required String sectionId, required String name}) async {
+    final ClientResponse response = await client.request(
+      RequestParam(
+        path: "${paths.sections}/$sectionId",
+        methodType: MethodType.post,
+        payload: {"name": name},
+      ),
+    );
+
+    if (response.apiResponse != null) {
+      return DataSuccess(SectionModel.fromMap(response.apiResponse?.data));
+    } else {
+      return DataFailed(response.apiError!);
+    }
   }
 }

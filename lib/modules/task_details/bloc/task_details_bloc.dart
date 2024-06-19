@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:task_tracker/modules/task_details/bloc/task_details_event.dart';
 import 'package:task_tracker/modules/task_details/bloc/task_details_state.dart';
 import 'package:task_tracker/modules/task_details/config/task_details_screen_config.dart';
 import 'package:task_tracker/modules/task_details/models/add_task_request_model.dart';
+import 'package:task_tracker/modules/task_details/models/task_time_model.dart';
 import 'package:task_tracker/modules/task_details/repository/task_details_repository.dart';
 
 class TaskDetailsBloc extends Bloc<TaskDetailsEvent, TaskDetailsState> {
@@ -21,6 +23,11 @@ class TaskDetailsBloc extends Bloc<TaskDetailsEvent, TaskDetailsState> {
     on<TaskDetailsTaskNameUpdateEvent>(_taskDetailsTaskNameUpdateEvent);
     on<TaskDetailsAddTaskEvent>(_taskDetailsAddTaskEvent);
     on<TaskDetailsEditTaskEvent>(_taskDetailsEditTaskEvent);
+    on<TaskDetailsDeleteTaskEvent>(_taskDetailsDeleteTaskEvent);
+    on<TaskDetailsCloseTaskEvent>(_taskDetailsCloseTaskEvent);
+    on<TaskDetailsStartTaskEvent>(_taskDetailsStartTaskEvent);
+    on<TaskDetailsPauseTaskEvent>(_taskDetailsPauseTaskEvent);
+    on<TaskDetailsTimerUpdateEvent>(_taskDetailsTimerUpdateEvent);
   }
   final TaskDetailsRepoInterfase _repository =
       GetIt.instance.get<TaskDetailsRepoInterfase>();
@@ -31,6 +38,11 @@ class TaskDetailsBloc extends Bloc<TaskDetailsEvent, TaskDetailsState> {
   DateTime? dueDate;
   SectionModel? selectedSection;
   bool isDataUpdated = false;
+  bool isTaskTimeLoading = true;
+  TaskTimeModel? taskTime;
+  Duration spendTime = const Duration();
+  Timer? _timer;
+  bool get isTaskCompleted => screenConfig?.task?.isCompleted ?? true;
 
   void _taskDetailsIntialEvent(
       TaskDetailsIntialEvent event, Emitter<TaskDetailsState> emit) async {
@@ -39,6 +51,25 @@ class TaskDetailsBloc extends Bloc<TaskDetailsEvent, TaskDetailsState> {
     }
     selectedSection = screenConfig?.currentSection;
     emit(TaskDetailsSectionUpdateState());
+
+    if (screenConfig?.task != null) {
+      DataState<TaskTimeModel> dataState =
+          await _repository.getTaskTime(taskId: screenConfig!.task!.id!);
+      if (dataState is DataSuccess) {
+        taskTime = dataState.data;
+        if (taskTime?.startedFrom != null) {
+          Duration diff = DateTime.now().difference(
+              DateTime.fromMillisecondsSinceEpoch(
+                  taskTime!.startedFrom!.toInt()));
+          taskTime!.spendTime = taskTime!.spendTime + diff.inSeconds;
+          spendTime = Duration(seconds: taskTime!.spendTime.toInt());
+          _startTimer();
+        }
+      }
+      spendTime = Duration(seconds: taskTime!.spendTime.toInt());
+      isTaskTimeLoading = false;
+      emit(TaskDetailsTaskTimeLoadedState());
+    }
   }
 
   void _taskDetailsOnTapDuedateEvent(TaskDetailsOnTapDuedateEvent event,
@@ -72,6 +103,8 @@ class TaskDetailsBloc extends Bloc<TaskDetailsEvent, TaskDetailsState> {
   }
 
   SectionModel? sectionFromId(String id) {
+    if (screenConfig?.sections == null) return null;
+
     int i = screenConfig!.sections!.indexWhere((e) => e.id == id);
     if (i != -1) {
       return screenConfig!.sections![i];
@@ -107,7 +140,7 @@ class TaskDetailsBloc extends Bloc<TaskDetailsEvent, TaskDetailsState> {
         emit(TaskDetailsTaskAddedState());
       } else {
         emit(TaskDetailsTaskAddFailedState(
-            dataState.error?.message ?? "Something went wrong"));
+            dataState.error?.errorResponse?.error ?? "Something went wrong"));
       }
     } catch (e, stack) {
       log(e.toString(), stackTrace: stack);
@@ -133,5 +166,119 @@ class TaskDetailsBloc extends Bloc<TaskDetailsEvent, TaskDetailsState> {
           : null;
       emit(TaskDetailsScreenUpdateState());
     }
+  }
+
+  void _taskDetailsStartTaskEvent(
+      TaskDetailsStartTaskEvent event, Emitter<TaskDetailsState> emit) async {
+    try {
+      DataState<bool> dataState =
+          await _repository.startTask(taskId: screenConfig!.task!.id!);
+
+      if (dataState is DataSuccess) {
+        spendTime = Duration(seconds: taskTime!.spendTime.toInt());
+        taskTime?.startedFrom = DateTime.now().millisecondsSinceEpoch;
+        emit(TaskDetailsTaskTimeLoadedState());
+        _startTimer();
+      } else {
+        emit(TaskDetailsErrorState("Something went wrong"));
+      }
+    } catch (e) {
+      emit(TaskDetailsErrorState("Something went wrong"));
+    }
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = null;
+    _timer = Timer.periodic(const Duration(seconds: 1), (time) {
+      if (!isClosed) {
+        spendTime = Duration(seconds: spendTime.inSeconds + 1);
+        taskTime!.spendTime = spendTime.inSeconds;
+        add(TaskDetailsTimerUpdateEvent());
+      } else {
+        _timer?.cancel();
+        _timer == null;
+      }
+    });
+  }
+
+  void _taskDetailsTimerUpdateEvent(
+      TaskDetailsTimerUpdateEvent event, Emitter<TaskDetailsState> emit) async {
+    emit(TaskDetailsSpendTimeUpdatedState());
+  }
+
+  void _taskDetailsPauseTaskEvent(
+      TaskDetailsPauseTaskEvent event, Emitter<TaskDetailsState> emit) async {
+    try {
+      DataState<bool> dataState = await _repository.pauseTask(
+          taskId: screenConfig!.task!.id!, spendTime: spendTime.inSeconds);
+
+      if (dataState is DataSuccess) {
+        _timer?.cancel();
+        _timer = null;
+        taskTime?.startedFrom = null;
+        emit(TaskDetailsTaskTimeLoadedState());
+      } else {
+        emit(TaskDetailsErrorState("Something went wrong"));
+      }
+    } catch (e) {
+      emit(TaskDetailsErrorState("Something went wrong"));
+    }
+  }
+
+  void _taskDetailsDeleteTaskEvent(
+      TaskDetailsDeleteTaskEvent event, Emitter<TaskDetailsState> emit) async {
+    try {
+      emit(TaskDetailsLoaderState(true));
+      DataState<bool> dataState =
+          await _repository.deleteTask(taskId: screenConfig?.task?.id ?? "");
+      emit(TaskDetailsLoaderState(false));
+      if (dataState is DataSuccess) {
+        emit(TaskDetailsTaskClosedState(
+            isClosed: true, message: "Task has been deleted successfully"));
+        screenConfig = null;
+      } else {
+        emit(TaskDetailsTaskClosedState(
+            isClosed: false,
+            message: dataState.error?.errorResponse?.error ??
+                "Somthing went wrong"));
+      }
+    } catch (e) {
+      emit(TaskDetailsTaskClosedState(
+          isClosed: false, message: "Somthing went wrong"));
+    }
+  }
+
+  void _taskDetailsCloseTaskEvent(
+      TaskDetailsCloseTaskEvent event, Emitter<TaskDetailsState> emit) async {
+    try {
+      emit(TaskDetailsLoaderState(true));
+      DataState<bool> dataState =
+          await _repository.closeTask(taskId: screenConfig!.task!.id!);
+      emit(TaskDetailsLoaderState(false));
+
+      if (dataState is DataSuccess) {
+        screenConfig!.task!.isCompleted = true;
+
+        await _repository.saveTaskInLocal(
+            task: screenConfig!.task!, spendTime: spendTime.inSeconds);
+        emit(TaskDetailsTaskClosedState(
+            isClosed: true, message: "Task has been closed successfully"));
+        screenConfig = null;
+      } else {
+        emit(TaskDetailsTaskClosedState(
+            isClosed: false,
+            message: dataState.error?.errorResponse?.error ??
+                "Somthing went wrong"));
+      }
+    } catch (e) {
+      emit(TaskDetailsTaskClosedState(
+          isClosed: false, message: "Somthing went wrong"));
+    }
+  }
+
+  void dispose() {
+    _timer?.cancel();
+    _timer = null;
   }
 }

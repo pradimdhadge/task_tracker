@@ -19,3 +19,18 @@ class TaskDetailsTaskAddFailedState extends TaskDetailsState {
   final String message;
   TaskDetailsTaskAddFailedState(this.message);
 }
+
+class TaskDetailsTaskClosedState extends TaskDetailsState {
+  final String message;
+  final bool isClosed;
+  TaskDetailsTaskClosedState({required this.isClosed, required this.message});
+}
+
+class TaskDetailsTaskTimeLoadedState extends TaskDetailsState {}
+
+class TaskDetailsErrorState extends TaskDetailsState {
+  final String message;
+  TaskDetailsErrorState(this.message);
+}
+
+class TaskDetailsSpendTimeUpdatedState extends TaskDetailsState {}

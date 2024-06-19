@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:task_tracker/modules/task_details/bloc/task_details_bloc.dart';
 
 class CommentSection extends StatelessWidget {
   const CommentSection({super.key});
@@ -6,6 +8,8 @@ class CommentSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ThemeData theme = Theme.of(context);
+    TaskDetailsBloc taskDetailsBloc = context.read<TaskDetailsBloc>();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -18,28 +22,30 @@ class CommentSection extends StatelessWidget {
         const SizedBox(height: 20),
         const _CommentWidget(),
         const SizedBox(height: 50),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              child: TextField(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
+        if (!taskDetailsBloc.isTaskCompleted) ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    hintText: "Enter comment here ...",
                   ),
-                  hintText: "Enter comment here ...",
+                  maxLines: 2,
+                  minLines: 1,
                 ),
-                maxLines: 2,
-                minLines: 1,
               ),
-            ),
-            IconButton.filled(
-              onPressed: () {},
-              icon: const Icon(Icons.send),
-            )
-          ],
-        ),
-        const SizedBox(height: 20),
+              IconButton.filled(
+                onPressed: () {},
+                icon: const Icon(Icons.send),
+              )
+            ],
+          ),
+          const SizedBox(height: 20),
+        ],
       ],
     );
   }

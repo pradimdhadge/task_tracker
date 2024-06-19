@@ -22,3 +22,13 @@ class TaskDetailsTaskNameUpdateEvent extends TaskDetailsEvent {
 class TaskDetailsAddTaskEvent extends TaskDetailsEvent {}
 
 class TaskDetailsEditTaskEvent extends TaskDetailsEvent {}
+
+class TaskDetailsDeleteTaskEvent extends TaskDetailsEvent {}
+
+class TaskDetailsCloseTaskEvent extends TaskDetailsEvent {}
+
+class TaskDetailsStartTaskEvent extends TaskDetailsEvent {}
+
+class TaskDetailsPauseTaskEvent extends TaskDetailsEvent {}
+
+class TaskDetailsTimerUpdateEvent extends TaskDetailsEvent {}

@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
@@ -46,19 +47,24 @@ class ClientResponse {
 }
 
 class ErrorResponse {
-  int? status;
-  String? message;
+  int? errorCode;
+  String? error;
+  String? errorTag;
+  int? httpCode;
   ErrorResponse({
-    this.status,
-    this.message,
+    this.errorCode,
+    this.error,
+    this.errorTag,
+    this.httpCode,
   });
 
-  factory ErrorResponse.fromMap(Map<dynamic, dynamic> map) {
-    return ErrorResponse(status: map['code'], message: map['message']);
-  }
-
-  factory ErrorResponse.fromJson(String jsonData) {
-    return ErrorResponse.fromMap(jsonDecode(jsonData));
+  factory ErrorResponse.fromMap(Map<String, dynamic> map) {
+    return ErrorResponse(
+      errorCode: map['error_code'] != null ? map['error_code'] as int : null,
+      error: map['error'] != null ? map['error'] as String : null,
+      errorTag: map['error_tag'] != null ? map['error_tag'] as String : null,
+      httpCode: map['http_code'] != null ? map['http_code'] as int : null,
+    );
   }
 }
 

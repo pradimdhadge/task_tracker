@@ -20,6 +20,8 @@ class AddTaskForm extends StatelessWidget {
       children: [
         CustomTextField(
           label: "Task Name",
+          minLines: 1,
+          maxLines: 2,
           controller: TextEditingController(text: taskDetailsBloc.taskName),
           onChanged: (value) =>
               taskDetailsBloc.add(TaskDetailsTaskNameUpdateEvent(value)),
@@ -115,7 +117,10 @@ class AddTaskForm extends StatelessWidget {
             }, builder: (context, state) {
               return FilledButton.icon(
                 onPressed: taskDetailsBloc.taskName.isNotEmpty
-                    ? () => taskDetailsBloc.add(TaskDetailsAddTaskEvent())
+                    ? () {
+                        FocusManager.instance.primaryFocus?.unfocus();
+                        taskDetailsBloc.add(TaskDetailsAddTaskEvent());
+                      }
                     : null,
                 label: const Text("Add Task"),
                 icon: const Icon(Icons.add),

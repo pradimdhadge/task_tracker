@@ -12,6 +12,9 @@ class ImageAssets {}
 class DbDocuments {
   final String collection = "taskTrackerCollection";
   final String defBox = "taskDefaultBox";
+  final String taskBox = "taskBox";
+  final String taskTimerBox = "taskTimerBox";
+  final String hiveDbKey = "HiveDbKey";
 }
 
 class SessionConstants {}
